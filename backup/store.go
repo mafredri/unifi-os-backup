@@ -44,7 +44,7 @@ func (s Store) Save(console, target, name string, r io.Reader, retention Retenti
 	if err != nil || info.Size() == 0 {
 		return "", fmt.Errorf("downloaded backup is empty")
 	}
-	dst := filepath.Join(dir, name)
+	dst := filepath.Join(dir, uniqueName(dir, name))
 	if err := os.Rename(temp, dst); err != nil {
 		return "", fmt.Errorf("archive backup: %w", err)
 	}
@@ -70,7 +70,7 @@ func (s Store) Prune(console, target string, retention Retention) error {
 	}
 	var files []archive
 	for _, e := range entries {
-		if e.IsDir() || strings.HasPrefix(e.Name(), ".") || !strings.HasPrefix(e.Name(), "unifi_os_backup_") {
+		if e.IsDir() || strings.HasPrefix(e.Name(), ".") || !managedBackupFilename(target, e.Name()) {
 			continue
 		}
 		when, ok := backupTime(e.Info)
@@ -126,6 +126,33 @@ func targetDir(target string) string {
 	}
 	return target
 }
+
+func managedBackupFilename(target, name string) bool {
+	if target == "" {
+		return strings.HasPrefix(name, "unifi_os_backup_") && !strings.HasPrefix(name, "unifi_os_backup_for_")
+	}
+	if strings.HasPrefix(name, "unifi_os_backup_for_"+target+"_") {
+		return true
+	}
+	switch target {
+	case "network":
+		return strings.HasPrefix(name, "network_backup_")
+	case "protect":
+		return strings.HasPrefix(name, "unifi_protect_backup.")
+	default:
+		return strings.HasPrefix(name, "unifi_os_backup_")
+	}
+}
+
+func uniqueName(dir, name string) string {
+	if _, err := os.Lstat(filepath.Join(dir, name)); os.IsNotExist(err) {
+		return name
+	}
+	extension := filepath.Ext(name)
+	stem := strings.TrimSuffix(name, extension)
+	return fmt.Sprintf("%s_download_%d%s", stem, time.Now().UnixNano(), extension)
+}
+
 func backupTime(info func() (os.FileInfo, error)) (time.Time, bool) {
 	fi, err := info()
 	if err != nil {

@@ -17,7 +17,7 @@ The supplied PowerShell reference answers the protocol questions: login is `POST
 - Each console and target has its own directory and retention lifecycle.
 - The full backup is the default; `users`, `uos`, `network`, `protect`, and `innerspace` are accepted targets. Every configured target is an independent download request; `network,protect` means two requests.
 - A successful response is written atomically, without exposing a partial archive.
-- The newest `daily` successful archives are retained. Older archives are grouped into fixed weekly-age buckets and up to `weekly` representatives are retained. The daily window therefore includes any weekly-cadence archive that falls inside it, avoiding double counting.
+- The newest `daily` successful archives, ordered by archive write time, are retained. Older archives are grouped into fixed weekly-age buckets and up to `weekly` representatives are retained. The daily window therefore includes any weekly-cadence archive that falls inside it, avoiding double counting. Retention does not parse filename timestamps because target filename formats differ.
 - Invalid credentials, HTTP errors, malformed filenames, empty bodies, and filesystem failures count as failed attempts.
 - `/healthz` is unhealthy after the configured per-console failure age has elapsed since the last successful backup, without exposing credentials.
 - Docker Compose, a Dockerfile, an example environment file, tests, and a GHCR GitHub Action are included.
@@ -42,7 +42,7 @@ Approach A is selected because it directly supports the requested multi-console 
 
 `Config` parses `CONSOLES` and matching per-console environment variables into `ConsoleConfig` values. Credentials may be read from `*_FILE` paths, which matches Docker secrets. `Service` runs each configured console immediately and on its own interval, and issues one job per configured target. `Downloader.Download` creates a per-console HTTP client with that console's TLS policy and timeout, posts credentials, gets the selected backup, validates status, content type, filename, and non-empty body, and streams to a temporary file. `Store.Save` renames the temporary file into the console/target directory and `Store.Prune` applies that console's retention policy by archive timestamp. `Health` records the last success and last error per job; the HTTP server returns 200 only while every job has succeeded within its console's health age threshold.
 
-The filename is treated as untrusted input. Only its base name is used, path separators and control characters are rejected, and a generated safe filename is used if the controller omits one. Temporary files are created in the destination directory so rename is atomic on the same filesystem.
+The filename is treated as untrusted input. Only its base name is used, path separators and control characters are rejected, and target-specific known filename families determine which files are eligible for pruning. Temporary files are created in the destination directory so rename is atomic on the same filesystem. A repeated filename is given a download timestamp suffix before rename so it cannot overwrite an earlier archive.
 
 ## Failure behavior and concurrency
 

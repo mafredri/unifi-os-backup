@@ -24,7 +24,7 @@ func TestDownloadLoginAndTarget(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Header().Set("filename", "unifi_os_backup_backup.unf")
+		w.Header().Set("filename", "network_backup_07.11.2026_10-13-AM_v10.4.57.unf")
 		_, _ = w.Write([]byte("data"))
 	}))
 	defer server.Close()
@@ -35,7 +35,7 @@ func TestDownloadLoginAndTarget(t *testing.T) {
 	}
 	defer body.Close()
 	data, _ := io.ReadAll(body)
-	if name != "unifi_os_backup_backup.unf" || string(data) != "data" {
+	if name != "network_backup_07.11.2026_10-13-AM_v10.4.57.unf" || string(data) != "data" {
 		t.Fatalf("got %q %q", name, data)
 	}
 }

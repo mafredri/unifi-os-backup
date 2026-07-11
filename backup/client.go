@@ -65,10 +65,6 @@ func (d Downloader) Download(ctx context.Context, console ConsoleConfig, target 
 		resp.Body.Close()
 		return "", nil, fmt.Errorf("download did not provide a safe filename")
 	}
-	if !strings.HasPrefix(name, "unifi_os_backup_") {
-		resp.Body.Close()
-		return "", nil, fmt.Errorf("download returned unexpected filename %q", name)
-	}
 	return name, resp.Body, nil
 }
 
