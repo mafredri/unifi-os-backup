@@ -2,6 +2,7 @@ package backup
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -82,6 +83,21 @@ func (a *Service) runJob(ctx context.Context, console ConsoleConfig, target stri
 	state.LastAttempt = now
 	a.status[key] = state
 	a.mu.Unlock()
+	latest, exists, err := a.store.Latest(console.Name, target)
+	if err != nil {
+		a.finishFailure(key, console, target, fmt.Errorf("inspect existing backups: %w", err))
+		return
+	}
+	if exists && time.Since(latest) < console.Interval {
+		a.mu.Lock()
+		state = a.status[key]
+		state.LastSuccess = latest
+		state.LastError = ""
+		a.status[key] = state
+		a.mu.Unlock()
+		a.log.Info("backup still current", "console", console.Name, "target", target, "last_archived", latest)
+		return
+	}
 	name, body, err := a.downloader.Download(ctx, console, target)
 	if err == nil {
 		defer body.Close()
@@ -99,6 +115,15 @@ func (a *Service) runJob(ctx context.Context, console ConsoleConfig, target stri
 	}
 	a.status[key] = state
 	a.mu.Unlock()
+}
+
+func (a *Service) finishFailure(key string, console ConsoleConfig, target string, err error) {
+	a.mu.Lock()
+	state := a.status[key]
+	state.LastError = err.Error()
+	a.status[key] = state
+	a.mu.Unlock()
+	a.log.Error("backup failed", "console", console.Name, "target", target, "error", err)
 }
 
 func (a *Service) handler() http.Handler {

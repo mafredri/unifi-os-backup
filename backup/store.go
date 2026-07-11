@@ -60,25 +60,10 @@ type archive struct {
 }
 
 func (s Store) Prune(console, target string, retention Retention) error {
-	dir := filepath.Join(s.Root, console, targetDir(target))
-	entries, err := os.ReadDir(dir)
-	if os.IsNotExist(err) {
-		return nil
-	}
+	files, err := s.archives(console, target)
 	if err != nil {
 		return err
 	}
-	var files []archive
-	for _, e := range entries {
-		if e.IsDir() || strings.HasPrefix(e.Name(), ".") || !managedBackupFilename(target, e.Name()) {
-			continue
-		}
-		when, ok := backupTime(e.Info)
-		if ok {
-			files = append(files, archive{filepath.Join(dir, e.Name()), when})
-		}
-	}
-	slices.SortFunc(files, func(a, b archive) int { return b.when.Compare(a.when) })
 	if len(files) == 0 {
 		return nil
 	}
@@ -118,6 +103,37 @@ func (s Store) Prune(console, target string, retention Retention) error {
 		}
 	}
 	return nil
+}
+
+func (s Store) Latest(console, target string) (time.Time, bool, error) {
+	files, err := s.archives(console, target)
+	if err != nil || len(files) == 0 {
+		return time.Time{}, false, err
+	}
+	return files[0].when, true, nil
+}
+
+func (s Store) archives(console, target string) ([]archive, error) {
+	dir := filepath.Join(s.Root, console, targetDir(target))
+	entries, err := os.ReadDir(dir)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	files := make([]archive, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() || strings.HasPrefix(e.Name(), ".") || !managedBackupFilename(target, e.Name()) {
+			continue
+		}
+		when, ok := backupTime(e.Info)
+		if ok {
+			files = append(files, archive{filepath.Join(dir, e.Name()), when})
+		}
+	}
+	slices.SortFunc(files, func(a, b archive) int { return b.when.Compare(a.when) })
+	return files, nil
 }
 
 func targetDir(target string) string {

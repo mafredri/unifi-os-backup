@@ -21,6 +21,8 @@ For each console and target, retention sorts successfully archived files by thei
 
 The service recognizes full files beginning with `unifi_os_backup_`, Network files beginning with `network_backup_`, Protect files beginning with `unifi_protect_backup.`, and targeted OS files beginning with `unifi_os_backup_for_<target>_`. If a console returns the same filename again, the second archive receives a download timestamp suffix instead of overwriting the first.
 
+On startup, the service checks the newest existing archive for each console and target. If it is newer than that console's backup interval, startup reuses it and skips a duplicate download. This prevents a container restart from creating an extra daily backup.
+
 The default health endpoint is `/healthz`. It returns 503 until every configured console/target has completed one successful archive, and after a success becomes 503 when any job has been unsuccessful for longer than that console's `CONSOLE_<NAME>_HEALTH_MAX_AGE`. `/readyz` has the same contract. Errors are logged without credentials. A Docker or Compose healthcheck receiving 503 marks the container unhealthy; it does not restart the container by itself. The service must exit for a restart policy to restart it.
 
 ## Configuration
