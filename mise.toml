@@ -8,19 +8,26 @@ go = "1.27.3"
 GOTOOLCHAIN = "local"
 
 [tasks.check]
-description = "Check formatting, vet, and run the tests with and without the race detector"
-run = [
-  'unformatted=$(gofmt -l .); if [ -n "$unformatted" ]; then printf "%s\n" "$unformatted"; exit 1; fi',
-  "go vet ./...",
-  "go test ./...",
-  "go test -race ./...",
-]
+description = "Run every check the CI test job runs"
+depends = ["fmt/check", "lint/go", "test/go"]
 
-[tasks.image]
+[tasks."fmt/check"]
+description = "Check Go formatting"
+run = 'unformatted=$(gofmt -l .); if [ -n "$unformatted" ]; then printf "%s\n" "$unformatted"; exit 1; fi'
+
+[tasks."lint/go"]
+description = "Vet the Go code"
+run = "go vet ./..."
+
+[tasks."test/go"]
+description = "Run the Go tests with and without the race detector"
+run = ["go test ./...", "go test -race ./..."]
+
+[tasks."build/image"]
 description = "Build the image as unifi-os-backup:local"
 run = "docker build -t unifi-os-backup:local ."
 
-[tasks.image-test]
+[tasks."test/image"]
 description = "Build the image and check it with scripts/image-test.sh"
-depends = ["image"]
+depends = ["build/image"]
 run = "scripts/image-test.sh unifi-os-backup:local"

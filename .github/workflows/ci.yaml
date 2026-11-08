@@ -1,4 +1,4 @@
-name: Build and publish UniFi OS archiver
+name: CI
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
-      - run: mise run image-test
+      - run: mise run test/image
 
   publish:
     if: github.event_name == 'push'

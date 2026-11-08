@@ -37,10 +37,10 @@ The service uses the UniFi OS API endpoints `POST /api/auth/login` and `GET /api
 
 ```sh
 mise run check       # gofmt, go vet, go test, go test -race
-mise run image-test  # docker build, then scripts/image-test.sh
+mise run test/image  # docker build, then scripts/image-test.sh
 ```
 
-[mise](https://mise.jdx.dev) installs the Go version in `mise.toml`. The Compose file pulls `ghcr.io/mafredri/unifi-os-backup:latest`. The GitHub Action runs `mise run check` on pull requests and pushes, runs `mise run image-test` on pull requests, and publishes the image on pushes to `main` and version tags. To build locally, use `mise run image` or `docker build` directly; Compose intentionally does not build the image.
+[mise](https://mise.jdx.dev) installs the Go version in `mise.toml`. The Compose file pulls `ghcr.io/mafredri/unifi-os-backup:latest`. The CI workflow runs `mise run check` on pull requests and pushes, runs `mise run test/image` on pull requests, and publishes the image on pushes to `main` and version tags. To build locally, use `mise run build/image` or `docker build` directly; Compose intentionally does not build the image.
 
 ## Dependency updates
 
