@@ -1,6 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "rebaseWhen": "behind-base-branch",
   "enabledManagers": [
     "docker-compose",
     "dockerfile",
@@ -19,6 +20,15 @@
     {
       "matchManagers": ["gomod"],
       "postUpdateOptions": ["gomodTidy"]
+    },
+    {
+      "matchDatasources": ["golang-version"],
+      "groupName": "Go"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["golang"],
+      "groupName": "Go"
     }
   ]
 }

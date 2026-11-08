@@ -36,13 +36,12 @@ The service uses the UniFi OS API endpoints `POST /api/auth/login` and `GET /api
 ## Development
 
 ```sh
-go test ./...
-go vet ./...
-go build ./...
+make check       # gofmt, go vet, go test, go test -race
+make image-test  # docker build, then scripts/image-test.sh
 ```
 
-The Compose file pulls `ghcr.io/mafredri/unifi-os-backup:latest`. The GitHub Action runs these checks and publishes that image on pushes to `main` and version tags. To build locally, use `docker build` directly; Compose intentionally does not build the image.
+The Compose file pulls `ghcr.io/mafredri/unifi-os-backup:latest`. The GitHub Action runs `make check` on pull requests and pushes, runs `make image-test` on pull requests, and publishes the image on pushes to `main` and version tags. To build locally, use `make image` or `docker build` directly; Compose intentionally does not build the image.
 
 ## Dependency updates
 
-Renovate is configured in [`renovate.json`](renovate.json) for Docker images, GitHub Actions, and Go modules. It groups container and workflow updates and runs `go mod tidy` after Go dependency updates.
+Renovate is configured in [`renovate.json`](renovate.json) for Docker images, GitHub Actions, and Go modules. It groups container and workflow updates, puts the Go toolchain and the `golang` builder image in one Go group, pins GitHub Actions to commit digests, and runs `go mod tidy` after Go dependency updates. Renovate rebases its branches when `main` moves, so each pull request is tested against the current `main`.
