@@ -36,12 +36,12 @@ The service uses the UniFi OS API endpoints `POST /api/auth/login` and `GET /api
 ## Development
 
 ```sh
-make check       # gofmt, go vet, go test, go test -race
-make image-test  # docker build, then scripts/image-test.sh
+mise run check       # gofmt, go vet, go test, go test -race
+mise run image-test  # docker build, then scripts/image-test.sh
 ```
 
-The Compose file pulls `ghcr.io/mafredri/unifi-os-backup:latest`. The GitHub Action runs `make check` on pull requests and pushes, runs `make image-test` on pull requests, and publishes the image on pushes to `main` and version tags. To build locally, use `make image` or `docker build` directly; Compose intentionally does not build the image.
+[mise](https://mise.jdx.dev) installs the Go version in `mise.toml`. The Compose file pulls `ghcr.io/mafredri/unifi-os-backup:latest`. The GitHub Action runs `mise run check` on pull requests and pushes, runs `mise run image-test` on pull requests, and publishes the image on pushes to `main` and version tags. To build locally, use `mise run image` or `docker build` directly; Compose intentionally does not build the image.
 
 ## Dependency updates
 
-Renovate is configured in [`renovate.json`](renovate.json) for Docker images, GitHub Actions, and Go modules. It groups container and workflow updates, puts the Go toolchain and the `golang` builder image in one Go group, pins GitHub Actions to commit digests, and runs `go mod tidy` after Go dependency updates. Renovate rebases its branches when `main` moves, so each pull request is tested against the current `main`.
+Renovate is configured in [`renovate.json`](renovate.json) for Docker images, GitHub Actions, Go modules, and `mise.toml`. It groups container and workflow updates, puts the Go version in `mise.toml`, the go.mod toolchain, and the `golang` builder image in one Go group, pins GitHub Actions to commit digests, and runs `go mod tidy` after Go dependency updates. Renovate rebases its branches when `main` moves, so each pull request is tested against the current `main`.
