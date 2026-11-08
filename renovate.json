@@ -6,7 +6,8 @@
     "docker-compose",
     "dockerfile",
     "github-actions",
-    "gomod"
+    "gomod",
+    "mise"
   ],
   "packageRules": [
     {
@@ -26,8 +27,7 @@
       "groupName": "Go"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["golang"],
+      "matchPackageNames": ["golang", "golang/go"],
       "groupName": "Go"
     }
   ]

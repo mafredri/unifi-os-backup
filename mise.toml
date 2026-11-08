@@ -1,0 +1,26 @@
+# Tools and tasks for development and CI (jdx/mise-action). Renovate updates go
+# in one group with go.mod's toolchain and the Dockerfile's golang image.
+[tools]
+go = "1.27.3"
+
+[env]
+# Fail instead of downloading another Go when go.mod asks for a newer one.
+GOTOOLCHAIN = "local"
+
+[tasks.check]
+description = "Check formatting, vet, and run the tests with and without the race detector"
+run = [
+  'unformatted=$(gofmt -l .); if [ -n "$unformatted" ]; then printf "%s\n" "$unformatted"; exit 1; fi',
+  "go vet ./...",
+  "go test ./...",
+  "go test -race ./...",
+]
+
+[tasks.image]
+description = "Build the image as unifi-os-backup:local"
+run = "docker build -t unifi-os-backup:local ."
+
+[tasks.image-test]
+description = "Build the image and check it with scripts/image-test.sh"
+depends = ["image"]
+run = "scripts/image-test.sh unifi-os-backup:local"
