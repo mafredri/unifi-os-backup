@@ -1,7 +1,7 @@
 # Tools and tasks for development and CI (jdx/mise-action). Renovate updates go
 # in one group with go.mod's toolchain and the Dockerfile's golang image.
 [tools]
-go = "1.27.3"
+go = "1.27.4"
 
 [env]
 # Fail instead of downloading another Go when go.mod asks for a newer one.
